@@ -1,10 +1,14 @@
 package it.sephiroth.utils
 {
+	import flash.net.registerClassAlias;
+	import flash.utils.IDataInput;
+	import flash.utils.IDataOutput;
+	import flash.utils.IExternalizable;
 	import flash.utils.getQualifiedClassName;
 	
 	import it.sephiroth.utils.collections.iterators.Iterator;
 
-	public class HashMap
+	public class HashMap implements IExternalizable
 	{
 		private static const DEFAULT_INITIAL_CAPACITY: int = 32;
 		private static const DEFAULT_LOAD_FACTOR: Number = 0.75;
@@ -17,9 +21,44 @@ package it.sephiroth.utils
 		private var loadFactor: Number;
 		internal var modCount: int;
 		
+		private static const ALIAS:* = registerClassAlias( getQualifiedClassName(HashMap), HashMap );
+		
 		internal var table: Vector.<Entry>;
 		private var threshold: int;
 
+		// IExternalizable
+		
+		/**
+		 * Implement IExternalizable for custom objects written
+		 * into the hashmap
+		 */
+		public function writeExternal( output: IDataOutput ): void
+		{
+			output.writeInt( size() );
+			
+			var i: Iterator = entrySet().iterator();
+			var e: Entry;
+			for( i; i.hasNext(); )
+			{
+				e = i.next() as Entry;
+				output.writeObject( e.getKey() );
+				output.writeObject( e.getValue() );
+			}
+		}
+		
+		public function readExternal( input: IDataInput ): void
+		{
+			var s: int = input.readInt();
+			
+			resize(s);
+			
+			while( input.bytesAvailable > 0 )
+			{
+				put( input.readObject(), input.readObject() );
+			}
+		}
+		
+		// HashMap
 		public function HashMap()
 		{
 			loadFactor = DEFAULT_LOAD_FACTOR;

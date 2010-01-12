@@ -1,5 +1,7 @@
 package it.sephiroth.utils
 {
+	
+
 	public final class Entry extends ObjectHash implements IMapEntry
 	{
 		internal var key: Object;
@@ -8,7 +10,7 @@ package it.sephiroth.utils
 		internal var next: Entry;
 		internal var hash: int;
 		
-		public function Entry( h: int, k: Object, v: Object, n: Entry )
+		public function Entry( h: int = -1, k: Object = null, v: Object = null, n: Entry = null )
 		{
 			value = v;
 			key = k;

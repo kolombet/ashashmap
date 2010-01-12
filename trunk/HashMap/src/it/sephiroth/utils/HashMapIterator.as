@@ -4,10 +4,10 @@ package it.sephiroth.utils
 
 	public class HashMapIterator implements Iterator
 	{
-		private var _current: Entry;
-		private var _index: int = 0;
-		private var _map: HashMap;
-		private var _next: Entry;
+		protected var _current: Entry;
+		protected var _index: int = 0;
+		protected var _map: HashMap;
+		protected var _next: Entry;
 
 		public function HashMapIterator( map: HashMap )
 		{
