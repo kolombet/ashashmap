@@ -187,6 +187,8 @@ package it.sephiroth.utils
 				return hash(getHashCodeForString(String(obj)));
 			else if( obj is Number )
 				return hash( hashLib.hashCode(obj.toString()));
+			else if( obj is Boolean )
+				return hash( Boolean(obj) ? 1231 : 1237 );
 			else
 				return hash( hashLib.hashCode(getQualifiedClassName(obj)));
 		}
