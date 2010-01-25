@@ -14,17 +14,17 @@ package it.sephiroth.utils
 		private static const DEFAULT_LOAD_FACTOR: Number = 0.75;
 		private static const MAXIMUM_CAPACITY: int = 1 << 30;
 		private static const serialVersionUID: Number = 362498820763181265;
-		private var _size: int;
-		private var _entrySet: EntrySet;
-		private var _keySet: KeySet;
-		private var _values: ValueSet;
-		private var loadFactor: Number;
+		protected var _size: int;
+		protected var _entrySet: EntrySet;
+		protected var _keySet: KeySet;
+		protected var _values: ValueSet;
+		protected var loadFactor: Number;
+		protected var threshold: int;
 		internal var modCount: int;
 		
 		private static const ALIAS:* = registerClassAlias( getQualifiedClassName(HashMap), HashMap );
 		
-		internal var table: Vector.<Entry>;
-		private var threshold: int;
+		protected var _table: Vector.<Entry>;
 
 		// IExternalizable
 		
@@ -32,6 +32,12 @@ package it.sephiroth.utils
 		 * Implement IExternalizable for custom objects written
 		 * into the hashmap
 		 */
+
+		public function get table():Vector.<Entry>
+		{
+			return _table;
+		}
+
 		public function writeExternal( output: IDataOutput ): void
 		{
 			output.writeInt( size() );
@@ -58,12 +64,15 @@ package it.sephiroth.utils
 			}
 		}
 		
-		// HashMap
-		public function HashMap()
+		/**
+		 * 
+		 * @param initialCapacity	Set the initial table capacity. use -1 to use the default value
+		 */
+		public function HashMap( initialCapacity: int = -1 )
 		{
 			loadFactor = DEFAULT_LOAD_FACTOR;
-			threshold = ( DEFAULT_INITIAL_CAPACITY * DEFAULT_LOAD_FACTOR );
-			table = new Vector.<Entry>( DEFAULT_INITIAL_CAPACITY );
+			threshold = ( ( initialCapacity <= 0 ? DEFAULT_INITIAL_CAPACITY : initialCapacity ) * DEFAULT_LOAD_FACTOR );
+			_table = new Vector.<Entry>( DEFAULT_INITIAL_CAPACITY );
 			init();
 		}
 		
@@ -108,7 +117,7 @@ package it.sephiroth.utils
 		public function clear(): void
 		{
 			modCount++;
-			var tab: Vector.<Entry> = table;
+			var tab: Vector.<Entry> = _table;
 
 			for ( var i: int = 0; i < tab.length; i++ )
 				tab[ i ] = null;
@@ -124,7 +133,7 @@ package it.sephiroth.utils
 		public function clone(): Object
 		{
 			var result: HashMap = new HashMap();
-			result.table = new Vector.<Entry>( table.length );
+			result._table = new Vector.<Entry>( _table.length );
 			result.modCount = 0;
 			result._size = 0;
 			result.init();
@@ -155,7 +164,7 @@ package it.sephiroth.utils
 			if ( value == null )
 				return containsNullValue();
 
-			var tab: Vector.<Entry> = table;
+			var tab: Vector.<Entry> = _table;
 
 			for ( var i: int = 0; i < tab.length; i++ )
 				for ( var e: Entry = tab[ i ]; e != null; e = e.next )
@@ -216,7 +225,7 @@ package it.sephiroth.utils
 				return getForNullKey();
 			var tmp_hash: int = getGenericObjectHashCode(key);/* hash( key.hashCode() );*/
 
-			for ( var e: Entry = table[ indexFor( tmp_hash, table.length ) ]; e != null; e = e.next )
+			for ( var e: Entry = _table[ indexFor( tmp_hash, _table.length ) ]; e != null; e = e.next )
 			{
 				var k: Object;
 
@@ -244,9 +253,9 @@ package it.sephiroth.utils
 			if ( key == null )
 				return putForNullKey( value );
 			var h: int = getGenericObjectHashCode(key);/* hash( key.hashCode() );*/
-			var i: int = indexFor( h, table.length );
+			var i: int = indexFor( h, _table.length );
 
-			for ( var e: Entry = table[ i ]; e != null; e = e.next )
+			for ( var e: Entry = _table[ i ]; e != null; e = e.next )
 			{
 				var k: Object;
 
@@ -282,12 +291,12 @@ package it.sephiroth.utils
 
 				if ( targetCapacity > MAXIMUM_CAPACITY )
 					targetCapacity = MAXIMUM_CAPACITY;
-				var newCapacity: int = table.length;
+				var newCapacity: int = _table.length;
 
 				while ( newCapacity < targetCapacity )
 					newCapacity <<= 1;
 
-				if ( newCapacity > table.length )
+				if ( newCapacity > _table.length )
 					resize( newCapacity );
 			}
 
@@ -324,11 +333,11 @@ package it.sephiroth.utils
 
 		protected function addEntry( hash: int, key: Object, value: Object, bucketIndex: int ): void
 		{
-			var e: Entry = table[ bucketIndex ];
-			table[ bucketIndex ] = new Entry( hash, key, value, e );
+			var e: Entry = _table[ bucketIndex ];
+			_table[ bucketIndex ] = new Entry( hash, key, value, e );
 
 			if ( _size++ >= threshold )
-				resize( 2 * table.length );
+				resize( 2 * _table.length );
 		}
 
 
@@ -340,7 +349,7 @@ package it.sephiroth.utils
 		{
 			var h: int = ( key == null ) ? 0 : getGenericObjectHashCode(key);/* hash( key.hashCode() );*/
 
-			for ( var e: Entry = table[ indexFor( h, table.length ) ]; e != null; e = e.next )
+			for ( var e: Entry = _table[ indexFor( h, _table.length ) ]; e != null; e = e.next )
 			{
 				var k: Object;
 
@@ -358,8 +367,8 @@ package it.sephiroth.utils
 		internal function removeEntryForKey( key: Object ): Entry
 		{
 			var h: int = ( key == null ) ? 0 : getGenericObjectHashCode( key ); /*hash( key.hashCode() );*/
-			var i: int = indexFor( h, table.length );
-			var prev: Entry = table[ i ];
+			var i: int = indexFor( h, _table.length );
+			var prev: Entry = _table[ i ];
 			var e: Entry = prev;
 
 			while ( e != null )
@@ -373,7 +382,7 @@ package it.sephiroth.utils
 					_size--;
 
 					if ( prev == e )
-						table[ i ] = next;
+						_table[ i ] = next;
 					else
 						prev.next = next;
 					e.recordRemoval( this );
@@ -393,8 +402,8 @@ package it.sephiroth.utils
 			var entry: Entry = Entry( o );
 			var key: Object = entry.getKey();
 			var h: int = ( key == null ) ? 0 : getGenericObjectHashCode( key ); /*hash( key.hashCode() ); */
-			var i: int = indexFor( h, table.length );
-			var prev: Entry = table[ i ];
+			var i: int = indexFor( h, _table.length );
+			var prev: Entry = _table[ i ];
 			var e: Entry = prev;
 
 			while ( e != null )
@@ -407,7 +416,7 @@ package it.sephiroth.utils
 					_size--;
 
 					if ( prev == e )
-						table[ i ] = next;
+						_table[ i ] = next;
 					else
 						prev.next = next;
 					e.recordRemoval( this );
@@ -425,7 +434,7 @@ package it.sephiroth.utils
 		 */
 		private function containsNullValue(): Boolean
 		{
-			var tab: Vector.<Entry> = table;
+			var tab: Vector.<Entry> = _table;
 
 			for ( var i: int = 0; i < tab.length; i++ )
 				for ( var e: Entry = tab[ i ]; e != null; e = e.next )
@@ -445,15 +454,15 @@ package it.sephiroth.utils
 		 */
 		private function createEntry( hash: int, key: Object, value: Object, bucketIndex: int ): void
 		{
-			var e: Entry = table[ bucketIndex ];
-			table[ bucketIndex ] = new Entry( hash, key, value, e );
+			var e: Entry = _table[ bucketIndex ];
+			_table[ bucketIndex ] = new Entry( hash, key, value, e );
 			_size++;
 		}
 
 
 		private function getForNullKey(): Object
 		{
-			for ( var e: Entry = table[ 0 ]; e != null; e = e.next )
+			for ( var e: Entry = _table[ 0 ]; e != null; e = e.next )
 			{
 				if ( e.key == null )
 					return e.value;
@@ -474,9 +483,9 @@ package it.sephiroth.utils
 		private function putForCreate( key: Object, value: Object ): void
 		{
 			var h: int = ( key == null ) ? 0 : hash( key.hashCode() );
-			var i: int = indexFor( h, table.length );
+			var i: int = indexFor( h, _table.length );
 
-			for ( var e: Entry = table[ i ]; e != null; e = e.next )
+			for ( var e: Entry = _table[ i ]; e != null; e = e.next )
 			{
 				var k: Object;
 
@@ -490,7 +499,7 @@ package it.sephiroth.utils
 
 		private function putForNullKey( value: Object ): Object
 		{
-			for ( var e: Entry = table[ 0 ]; e != null; e = e.next )
+			for ( var e: Entry = _table[ 0 ]; e != null; e = e.next )
 			{
 				if ( e.key == null )
 				{
@@ -507,9 +516,9 @@ package it.sephiroth.utils
 		}
 
 
-		private function resize( newCapacity: int ): void
+		protected function resize( newCapacity: int ): void
 		{
-			var oldTable: Vector.<Entry> = table;
+			var oldTable: Vector.<Entry> = _table;
 			var oldCapacity: int = oldTable.length;
 
 			if ( oldCapacity == MAXIMUM_CAPACITY )
@@ -520,13 +529,13 @@ package it.sephiroth.utils
 
 			var newTable: Vector.<Entry> = new Vector.<Entry>( newCapacity );
 			transfer( newTable );
-			table = newTable;
+			_table = newTable;
 			threshold = ( newCapacity * loadFactor );
 		}
 
-		private function transfer( newTable: Vector.<Entry> ): void
+		protected function transfer( newTable: Vector.<Entry> ): void
 		{
-			var src: Vector.<Entry> = table;
+			var src: Vector.<Entry> = _table;
 			var newCapacity: int = newTable.length;
 
 			for ( var j: int = 0; j < src.length; j++ )
