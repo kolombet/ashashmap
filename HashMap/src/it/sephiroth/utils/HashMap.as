@@ -72,7 +72,7 @@ package it.sephiroth.utils
 		{
 			loadFactor = DEFAULT_LOAD_FACTOR;
 			threshold = ( ( initialCapacity <= 0 ? DEFAULT_INITIAL_CAPACITY : initialCapacity ) * DEFAULT_LOAD_FACTOR );
-			_table = new Vector.<Entry>( DEFAULT_INITIAL_CAPACITY );
+			_table = new Vector.<Entry>( initialCapacity <= 0 ? DEFAULT_INITIAL_CAPACITY : initialCapacity );
 			init();
 		}
 		
