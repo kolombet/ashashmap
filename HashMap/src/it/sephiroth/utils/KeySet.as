@@ -5,7 +5,6 @@ package it.sephiroth.utils
 	public class KeySet
 	{
 		private var _map: HashMap;
-		public static const MAX_VALUE: int = uint(-1);
 		
 		public function KeySet( map: HashMap )
 		{
@@ -51,9 +50,9 @@ package it.sephiroth.utils
 					var newCap: int = ((cap / 2) + 1) * 3;
 					if (newCap <= cap)
 					{
-						if (cap ==  MAX_VALUE )
+						if (cap ==  EntrySet.MAX_VALUE )
 							throw new RangeError("Required array size too large");
-						newCap = MAX_VALUE;
+						newCap = EntrySet.MAX_VALUE;
 					}
 					r.length = newCap;
 				}
