@@ -8,14 +8,16 @@ package it.sephiroth.utils
 		protected var _index: int = 0;
 		protected var _map: HashMap;
 		protected var _next: Entry;
+		protected var _lenght: int;
 
 		public function HashMapIterator( map: HashMap )
 		{
 			_map = map;
+			_lenght = map.table.length;
 
 			if ( _map.size() > 0 )
 			{
-				while ( _index < _map.table.length && ( _next = _map.table[ _index++ ] ) == null ){}
+				while ( _index < _lenght && ( _next = _map.table[ _index++ ] ) == null ){}
 			}
 		}
 
@@ -32,7 +34,7 @@ package it.sephiroth.utils
 			
 			if(( _next = e.next ) == null )
 			{
-				while ( _index < _map.table.length && ( _next = _map.table[ _index++ ] ) == null ){}
+				while ( _index < _lenght && ( _next = _map.table[ _index++ ] ) == null ){}
 			}
 			_current = e;
 			return e;
